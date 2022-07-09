@@ -1,0 +1,36 @@
+1. Напишите запрос по своей базе с регулярным выражением, добавьте пояснение, что вы хотите найти.
+    Найдем все номера телефонов, которые не соответствуют формату +7XXXXXXXXXX;
+    select * from customers where phone !~ '^\+[7][0-9]{10}$'
+2. Напишите запрос по своей базе с использованием LEFT JOIN и INNER JOIN, как порядок соединений в FROM влияет на результат? Почему?
+
+
+3. Добавим некоторые товары в таблицу с товарами: 
+    insert into products(name, description, price, product_category_id, priduct_brand_id, product_season_id, product_color_id, available_sizes)
+    values
+    ('Кроссовки BIOM C-TRAIL M', 
+     'Высококачественная натуральная кожа яка собственного производства бренда  гарантирует невероятную прочность и долговечность', 
+      12000.12, 1, 3, 3, 5, [40, 41, 42, 43, 44, 45]),
+    ('Кроссовки MX M', 
+     'ECCO FLUIDFORM™ – уникальная технология бренда ECCO позволяет создать анатомическую колодку и присоединить подошву модели, не используя клей или нитки', 
+      10000.12, 1, 3, 3, 5, [41, 42, 43, 44, 45])
+    ('Кроссовки ASTIR', 
+     'Верх кроссовок изготовлен из натуральных материалов, произведенных на собственных заводах бренда ECCO. Среди их главных достоинств – прочность, мягкость и превосходный внешний вид.', 
+      10000.12, 1, 3, 3, 5, [41, 42, 43, 44, 45])
+     returning *; 
+ 
+ 4. Напишите запрос с обновлением данные используя UPDATE FROM.
+    Например, нам нужно загрузить обновленную информацию по товарам из файла. Мы сохранили загруженные данные во временную таблицу и обновляем реальную таблицу следующим запросом: 
+        with products_for_update as (
+            select p.id, pu.articul, pu.name, pu.description, pu.price, pu.available_sizes
+            from temp_products_uploaded as pu
+            inner join products as p on pu.articul = p.articul
+            where p.deleted_at is null )
+        update products set 
+            updated_at = now(),
+            name  = products_for_update.name,
+            description = products_for_update.description,
+            price = products_for_update.price,
+            available_sizes = products_for_update.available_sizes
+        from products_for_update
+        where products.id = products_for_update.id;
+        
