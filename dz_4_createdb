@@ -19,4 +19,8 @@ CREATE ROLE developer_visingiri WITH
     TABLESPACE = shop_ts
     CONNECTION LIMIT = -1;
 
-4. 
+4. Создадим схему для магазина
+    CREATE SCHEMA shop_dev;
+
+
+
