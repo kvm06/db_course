@@ -1,0 +1,22 @@
+1. Создаем роль developer
+CREATE ROLE developer_visingiri WITH
+    LOGIN
+    SUPERUSER
+    INHERIT
+    CREATEDB
+    CREATEROLE
+    REPLICATION
+    VALID UNTIL 'infinity'; 
+  
+ 2. Создаем табличное пространство shop_ts предварительно создав директорию на сервере
+    CREATE TABLESPACE shop_ts OWNER developer_visingiri LOCATION '/var/lib/postgresql/14/main/shop_tblspace';
+ 
+ 3. Создаем базу данных shop_db с табличным пространством shop_ts 
+    CREATE DATABASE shop_db
+    WITH
+    OWNER = developer_visingiri
+    ENCODING = 'UTF8'
+    TABLESPACE = shop_ts
+    CONNECTION LIMIT = -1;
+
+4. 
