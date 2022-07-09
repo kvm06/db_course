@@ -22,5 +22,224 @@ CREATE ROLE developer_visingiri WITH
 4. Создадим схему для магазина
     CREATE SCHEMA shop_dev;
 
+5. Создадим таблицы БД внутри схемы shop_dev.
 
+create table shop_dev.customers (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  first_name varchar(255),
+  last_name varchar(255),
+  phone varchar(100) NOT NULL,
+  email varchar(100) NOT NULL UNIQUE,
+  password_hash varchar(255) NOT NULL,
+  address_id int references shop_dev.address(id)
+);
+
+create table shop_dev.address(
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  address_jsonb jsonb,
+  postal_code int, 
+  region text,
+  locality text,
+  address_end text
+);
+	
+create table shop_dev.products (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  name varchar(255) NOT NULL,
+  description text,
+  price numeric CHECK (price > 0),
+  gender smallint,
+  product_category_id int references shop_dev.product_categories(id),
+  product_type_id int references shop_dev.product_types(id),
+  priduct_brand_id int references shop_dev.product_brands(id),
+  product_season_id int references shop_dev.product_seasons(id),
+  product_color_id int references shop_dev.product_colors(id),
+  avg_raiting real,
+  available_sizes int[]
+ );
+
+create table shop_dev.products_photos (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  product_id int references shop_dev.products(id),
+  url varchar(100)
+ );
+ 
+create table shop_dev.product_categories (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  category_name varchar(255),
+  photo varchar(100)
+ );
+
+create table shop_dev.product_seasons (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  season_name varchar(100)
+);
+
+create table shop_dev.product_brands (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  brand_name varchar(100)
+ );
+ 
+create table shop_dev.product_types (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  type_name varchar(100)
+ );
+ 
+create table shop_dev.product_colors (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  color_name varchar(100)
+ );
+ 
+create table shop_dev.orders (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  customer_id int references shop_dev.customers(id),
+  order_status_id int references shop_dev.order_statuses(id)
+);
+
+create table shop_dev.order_statuses (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  status_name varchar
+);
+
+create table shop_dev.orders_products (
+  order_id int references shop_dev.orders(id),
+  product_id int references shop_dev.products(id),
+  quantity int NOT NULL DEFAULT 1
+);
+
+create table shop_dev.delivery (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  order_id int references shop_dev.orders(id),
+  delivery_status int references shop_dev.delivery_statuses(id),
+  delivery_method int references shop_dev.delivery_methods(id),
+  address_id int references shop_dev.address(id), 
+  shipping_cost numeric
+);
+
+create table shop_dev.delivery_methods (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  delivery_method varchar(255)
+);
+
+create table shop_dev.delivery_statuses (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  status_name varchar(100)
+);
+
+create table shop_dev.payments (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  contragent_name text,
+  contragent_inn text,
+  contragent_kpp text ,
+  contragent_account text ,
+  contragent_bank_name text ,
+  contragent_bank_bic text ,
+  payment_sum numeric NOT NULL,
+  payment_purpose numeric,
+  is_credit boolean NOT NULL,
+  payment_method varchar(100),
+  customer_id int references shop_dev.customers(id)
+);
+
+create table shop_dev.payment_order (
+  payment_id int references shop_dev.payments(id), 
+  order_id int references shop_dev.orders(id)
+);
+
+create table shop_dev.reviews (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  product_id int references shop_dev.products(id), 
+  customer_id int references shop_dev.customers(id), 
+  review_text text,
+  vote smallint
+);
+
+create table shop_dev.review_photos (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  review_id int references shop_dev.reviews(id),
+  url varchar
+);
+
+create table shop_dev.products_in_stock (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  product_id int references shop_dev.products(id),
+  stock_id int references shop_dev.stocks(id),
+  purchase_price numeric CHECK (purchase_price > 0), 
+  size smallint,
+  quantity int CHECK (quantity > 0)
+);
+
+create table shop_dev.stocks (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  name varchar(100),
+  address int references shop_dev.address(id)
+);
+
+create table shop_dev.users (
+  id serial PRIMARY KEY,
+  created_at timestamptz DEFAULT NOW(),
+  updated_at timestamptz,
+  deleted_at timestamptz,
+  first_name varchar(255),
+  last_name varchar(255),
+  password_hash varchar(255) NOT NULL,
+  email varchar(100) NOT NULL UNIQUE
+);
 
