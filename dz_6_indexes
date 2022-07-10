@@ -73,12 +73,15 @@
   "  ->  Parallel Seq Scan on reviews  (cost=0.00..39509.72 rows=600 width=1136)"
   "        Filter: (review_lexeme @@ to_tsquery('доставили | доставка | медленно |долго'::text))"
   
-  Добавим индекс GIN на поле с лексемами:
+  Добавим индекс GIN на поле с лексемами и выполним запрос еще раз:
+  create index on shop_dev.reviews using GIN(review_lexeme); 
   
-
-
-
-
+  Теперь запрос выполняется с использованием индекса: 
+  "Bitmap Heap Scan on reviews  (cost=95.40..5155.45 rows=1439 width=1136)"
+  "  Recheck Cond: (review_lexeme @@ to_tsquery('доставили | доставка | медленно |долго'::text))"
+  "  ->  Bitmap Index Scan on reviews_review_lexeme_idx  (cost=0.00..95.04 rows=1439 width=0)"
+  "        Index Cond: (review_lexeme @@ to_tsquery('доставили | доставка | медленно |долго'::text))"
+  
 4. Реализовать индекс на часть таблицы или индекс на поле с функцией
 В таблице customers есть уникальное поле email. Так как у нас записи в таблице фактически не удаляются, а помечаются удаленными в deleted_at создадим уникальный индекс, 
 который будет применяться только на неудаленные записи. 
