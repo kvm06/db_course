@@ -2,22 +2,41 @@
     Найдем все номера телефонов, которые не соответствуют формату +7XXXXXXXXXX;
     select * from customers where phone !~ '^\+[7][0-9]{10}$'
 2. Напишите запрос по своей базе с использованием LEFT JOIN и INNER JOIN, как порядок соединений в FROM влияет на результат? Почему?
+    Найдем все товары по категориям
+    select * from shop_dev.categories as c
+    left join shop_dev.products as p on c.id = p.product_category_id
+    
+    Изменим порядок соединения
+    select * from shop_dev.products as c
+    left join shop_dev.categories as p on p.product_category_id = c.id
+    В данном случае порядок имеет значение, т.к. в первом случае будут отображены категории, по которым нет товаров, 
+    а во втором случае будут отображены все товары независимо от того есть у него категория или нет.
+    
+    Тот же запрос выполненный через inner join, вернет только записи которые есть в обеих таблицах (товары с категориями). 
+    Порядок соединения не имеет значения.
+    select * from shop_dev.categories as c
+    inner join shop_dev.products as p on c.id = p.product_category_id
 
+3. Добавим некоторые категории и товары в таблицу с товарами: 
+    insert into shop_dev.product_categories(category_name) values ('Обувь'), ('Одежда'), ('Аксессуары');
+    insert into shop_dev.product_types(type_name) values ('Ботинки'), ('Туфли'), ('Кроссовки');
+    insert into shop_dev.product_seasons(season_name) values ('Летняя'), ('Зимняя'), ('Демисезонная');
+    insert into shop_dev.product_brands(brand_name) values ('PUMA'), ('Adidas'), ('ECCO');
+    insert into shop_dev.product_colors(color_name) values ('Черный'), ('Красный'), ('Синий'), ('Зеленый'), ('Белый');
 
-3. Добавим некоторые товары в таблицу с товарами: 
-    insert into products(name, description, price, product_category_id, priduct_brand_id, product_season_id, product_color_id, available_sizes)
+ insert into shop_dev.products(name, description, price, product_category_id, priduct_brand_id, product_season_id, product_color_id, available_sizes)
     values
     ('Кроссовки BIOM C-TRAIL M', 
      'Высококачественная натуральная кожа яка собственного производства бренда  гарантирует невероятную прочность и долговечность', 
-      12000.12, 1, 3, 3, 5, [40, 41, 42, 43, 44, 45]),
+      12000.12, 1, 3, 3, 5, array[40, 41, 42, 43, 44, 45]),
     ('Кроссовки MX M', 
      'ECCO FLUIDFORM™ – уникальная технология бренда ECCO позволяет создать анатомическую колодку и присоединить подошву модели, не используя клей или нитки', 
-      10000.12, 1, 3, 3, 5, [41, 42, 43, 44, 45])
+      10000.12, 1, 3, 3, 5, array[41, 42, 43, 44, 45]),
     ('Кроссовки ASTIR', 
      'Верх кроссовок изготовлен из натуральных материалов, произведенных на собственных заводах бренда ECCO. Среди их главных достоинств – прочность, мягкость и превосходный внешний вид.', 
-      10000.12, 1, 3, 3, 5, [41, 42, 43, 44, 45])
-     returning *; 
- 
+      10000.12, 1, 3, 3, 5, array[41, 42, 43, 44, 45])
+     returning *;  
+     
  4. Напишите запрос с обновлением данные используя UPDATE FROM.
     Например, нам нужно загрузить обновленную информацию по товарам из файла. Мы сохранили загруженные данные во временную таблицу и обновляем реальную таблицу следующим запросом: 
         with products_for_update as (
@@ -33,4 +52,10 @@
             available_sizes = products_for_update.available_sizes
         from products_for_update
         where products.id = products_for_update.id;
-        
+  5. 
+  delete from shop_dev.products as p
+using shop_dev.product_colors as pc
+where p.product_color_id = pc.id
+and pc.color_name = 'Синий'
+returning *;
+
