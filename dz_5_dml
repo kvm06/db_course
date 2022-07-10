@@ -52,10 +52,15 @@
             available_sizes = products_for_update.available_sizes
         from products_for_update
         where products.id = products_for_update.id;
-  5. 
-  delete from shop_dev.products as p
-using shop_dev.product_colors as pc
-where p.product_color_id = pc.id
-and pc.color_name = 'Синий'
-returning *;
+  5. Напишите запрос для удаления данных с оператором DELETE используя join с другой таблицей с помощью using.
+    Удалим все товары синего цвета. 
+    delete from shop_dev.products as p
+    using shop_dev.product_colors as pc
+    where p.product_color_id = pc.id
+    and pc.color_name = 'Синий'
+    returning *;
+
+6. Приведите пример использования утилиты COPY (по желанию)
+    Выгрузим все товары в CSV файл. 
+    copy (select * from shop_dev.products) to '/tmp/products.csv' with csv delimiter ',' header;
 
