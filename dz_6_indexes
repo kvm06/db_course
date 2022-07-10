@@ -1,0 +1,46 @@
+1. Создать индекс к какой-либо из таблиц вашей БД
+1. Создадим индекс на поля order_id и product_id таблицы orders_products 
+  create index on shop_dev.orders_products(order_id);
+  create index on shop_dev.orders_products(product_id);
+
+2. Выполним запрос для получения всех заказов за последние 3 месяца
+  explain analyze select * from shop_dev.orders o
+  inner join shop_dev.orders_products op on o.id = op.order_id
+  inner join shop_dev.products p on p.id = op.product_id
+  where o.created_at between now() and now() - interval '3 months';
+
+План запроса c примененим индекса: 
+"Nested Loop  (cost=5.57..766.82 rows=110 width=352) (actual time=0.590..0.591 rows=0 loops=1)"
+"  ->  Nested Loop  (cost=5.28..733.50 rows=110 width=48) (actual time=0.590..0.590 rows=0 loops=1)"
+"        ->  Seq Scan on orders o  (cost=0.00..334.02 rows=1 width=36) (actual time=0.589..0.590 rows=0 loops=1)"
+"              Filter: ((created_at >= now()) AND (created_at <= (now() - '3 mons'::interval)))"
+"              Rows Removed by Filter: 10001"
+"        ->  Bitmap Heap Scan on orders_products op  (cost=5.28..398.38 rows=110 width=12) (never executed)"
+"              Recheck Cond: (order_id = o.id)"
+"              ->  Bitmap Index Scan on orders_products_order_id_idx  (cost=0.00..5.25 rows=110 width=0) (never executed)"
+"                    Index Cond: (order_id = o.id)"
+"  ->  Index Scan using products_pkey on products p  (cost=0.29..0.30 rows=1 width=304) (never executed)"
+"        Index Cond: (id = op.product_id)"
+"Planning Time: 0.325 ms"
+"Execution Time: 0.618 ms"
+
+План этого же запроса без индексов: 
+"Gather  (cost=1334.32..13091.94 rows=110 width=352) (actual time=43.543..46.475 rows=0 loops=1)"
+"  Workers Planned: 2"
+"  Workers Launched: 2"
+"  ->  Nested Loop  (cost=334.32..12080.94 rows=46 width=352) (actual time=0.858..0.860 rows=0 loops=3)"
+"        ->  Hash Join  (cost=334.03..12067.00 rows=46 width=48) (actual time=0.857..0.859 rows=0 loops=3)"
+"              Hash Cond: (op.order_id = o.id)"
+"              ->  Parallel Seq Scan on orders_products op  (cost=0.00..10529.33 rows=458333 width=12) (actual time=0.009..0.010 rows=1 loops=3)"
+"              ->  Hash  (cost=334.02..334.02 rows=1 width=36) (actual time=0.802..0.803 rows=0 loops=3)"
+"                    Buckets: 1024  Batches: 1  Memory Usage: 8kB"
+"                    ->  Seq Scan on orders o  (cost=0.00..334.02 rows=1 width=36) (actual time=0.801..0.802 rows=0 loops=3)"
+"                          Filter: ((created_at >= now()) AND (created_at <= (now() - '3 mons'::interval)))"
+"                          Rows Removed by Filter: 10001"
+"        ->  Index Scan using products_pkey on products p  (cost=0.29..0.30 rows=1 width=304) (never executed)"
+"              Index Cond: (id = op.product_id)"
+"Planning Time: 0.376 ms"
+"Execution Time: 46.573 ms"
+
+4. Реализовать индекс на часть таблицы или индекс на поле с функцией
+В таблице customers есть 
