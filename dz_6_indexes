@@ -1,5 +1,5 @@
 1. Создать индекс к какой-либо из таблиц вашей БД
-1. Создадим индекс на поля order_id и product_id таблицы orders_products 
+  Создадим индекс на поля order_id и product_id таблицы orders_products 
   create index on shop_dev.orders_products(order_id);
   create index on shop_dev.orders_products(product_id);
 
@@ -7,7 +7,7 @@
   explain analyze select * from shop_dev.orders o
   inner join shop_dev.orders_products op on o.id = op.order_id
   inner join shop_dev.products p on p.id = op.product_id
-  where o.created_at between now() and now() - interval '3 months';
+  where o.created_at >= now() - interval '3 months';
 
 План запроса c примененим индекса: 
 "Nested Loop  (cost=5.57..766.82 rows=110 width=352) (actual time=0.590..0.591 rows=0 loops=1)"
@@ -42,5 +42,65 @@
 "Planning Time: 0.376 ms"
 "Execution Time: 46.573 ms"
 
+3. Реализовать индекс для полнотекстового поиска
+  Создадим индекс для поиска отзывов/комментариев к товарам по ключевым словам. 
+  У нас есть таблица reviews, в которой хранятся отзывы о товарах от покупателей. 
+  Добавим поле с лексемами
+  alter table shop_dev.reviews add column review_lexeme tsvector;
+  
+  Добавим имитацию комментариев
+  with symbols(characters) as (VALUES ('абвг дежз ийкл мноп рсту фхцч шщъы ьэюя'))
+  insert into shop_dev.reviews(review_text, review_lexeme )
+  select string_agg(substring(characters, (random() * length(characters) + 1)::int, 1), '')
+  from symbols
+  join generate_series(1,600) as word(chr_idx) on 1 = 1 -- длина слова
+  join generate_series(1,100000) as words(idx) on 1 = 1 -- количество записей
+  group by idx
+
+  Добавим еще комментарий, который мы будем искать
+  insert into shop_dev.reviews(review_text) 
+  values
+  ('Товар доставили очень медленно. Я недоволен.')
+  
+  добавим записи в новое поле с лексемами
+  update shop_dev.reviews set review_lexeme = to_tsvector(review_text); 
+  
+  найдем комментарии, где клиенты жалуются на долгую доставку
+  select * from shop_dev.reviews where review_lexeme @@ to_tsquery('доставили | доставка | медленно | долго');
+  План запроса без индекса
+  "Gather  (cost=1000.00..40653.62 rows=1439 width=1136)"
+  "  Workers Planned: 2"
+  "  ->  Parallel Seq Scan on reviews  (cost=0.00..39509.72 rows=600 width=1136)"
+  "        Filter: (review_lexeme @@ to_tsquery('доставили | доставка | медленно |долго'::text))"
+  
+  Добавим индекс GIN на поле с лексемами:
+  
+
+
+
+
 4. Реализовать индекс на часть таблицы или индекс на поле с функцией
-В таблице customers есть 
+В таблице customers есть уникальное поле email. Так как у нас записи в таблице фактически не удаляются, а помечаются удаленными в deleted_at создадим уникальный индекс, 
+который будет применяться только на неудаленные записи. 
+  create unique index on shop_dev.customers(email) where deleted_at is null;
+
+5. Создать индекс на несколько полей
+Например, нам необходимо, чтобы тип товара из таблицы product_types относился к определенной категории товара из таблицы categories; 
+В этом случае, мы можем создать индекс на поля product_category_id и product_type_id, чтобы можно было искать товары только по категории или по категории + по типу. 
+
+create index on shop_dev.products(product_category_id, product_type_id);
+explain analyze select * from shop_dev.products where product_category_id = 3 and product_type_id = 2;
+
+"Index Scan using products_product_category_id_product_type_id_idx on products  (cost=0.29..6.05 rows=1 width=304) (actual time=0.012..0.013 rows=0 loops=1)"
+"  Index Cond: ((product_category_id = 3) AND (product_type_id = 2))"
+"Planning Time: 0.261 ms"
+"Execution Time: 0.030 ms"
+
+6.Написать комментарии к каждому из индексов
+  comment on index shop_dev.orders_products_product_id_idx is 'Индекс для join-а с таблицей продуктов';
+  comment on index shop_dev.orders_products_order_id_idx is 'Индекс для join-а с таблицей заказов';
+  comment on index shop_dev.customers_email_idx is 'Индекс для обеспечения уникальности email';
+  comment on index shop_dev.products_product_category_id_product_type_id_idx is 'Индекс для поиска товара по категории или по категории и типу';
+
+7. Столкнулся с тем, что индексы на таблице orders_products не применялись при выборке большого количества строк из-за того, что использовался Hash Join. 
+Ограничил выборку тремя месяцами, планировщик поменял способ соединения на NestedLoop и применил индекс
