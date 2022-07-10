@@ -102,6 +102,7 @@ explain analyze select * from shop_dev.products where product_category_id = 3 an
 6.Написать комментарии к каждому из индексов
   comment on index shop_dev.orders_products_product_id_idx is 'Индекс для join-а с таблицей продуктов';
   comment on index shop_dev.orders_products_order_id_idx is 'Индекс для join-а с таблицей заказов';
+  comment on index shop_dev.reviews_review_lexeme_idx is 'Индекс GIN для полнотекстового поиска по комментариям к товару';
   comment on index shop_dev.customers_email_idx is 'Индекс для обеспечения уникальности email';
   comment on index shop_dev.products_product_category_id_product_type_id_idx is 'Индекс для поиска товара по категории или по категории и типу';
 
