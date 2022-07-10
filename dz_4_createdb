@@ -44,8 +44,9 @@ create table shop_dev.address(
   deleted_at timestamptz,
   address_jsonb jsonb,
   postal_code int, 
-  region text,
-  locality text,
+  country varchar(100),
+  region varchar(100),
+  locality varchar(100),
   address_end text
 );
 	
@@ -106,7 +107,8 @@ create table shop_dev.product_types (
   created_at timestamptz DEFAULT NOW(),
   updated_at timestamptz,
   deleted_at timestamptz,
-  type_name varchar(100)
+  type_name varchar(100),
+  category_id references shop_dev.categories(id)
  );
  
 create table shop_dev.product_colors (
