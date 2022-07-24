@@ -9,11 +9,11 @@ order by year_game
 
 2. написать cte показывающее тоже самое
 with points_by_year as (
-	select year_game, count(points) as count
+	select year_game, sum(points) as sum
 	from statistic
 	group by year_game
 )
-select points_by_year.year_game, points_by_year.count
+select points_by_year.year_game, points_by_year.sum
 from points_by_year
 order by points_by_year.year_game
 
