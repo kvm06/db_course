@@ -1,1 +1,34 @@
+1. Настройка физической репликации двумя кластерами базы данных. Кластеры main и replica будут находиться на одной виртуальной машине (работа через WSL). 
 
+В файле конфигурации для main, установим listen_addresses='localhost'
+
+Создадим кластер для реплики:
+sudo pg_createcluster 14 replica 
+
+Удалим pgdata из реплики 
+rm -rf /var/lib/postgresql/14/replica/*
+
+С помощью pg_basebackup перенесем резервную копию из main в replica
+pg_basebackup -h 127.0.0.1 -U replicator -p 5433 -D /var/lib/postgresql/14/replica -Fp -Xs -P -R
+
+Добавим параметр hot_standby в конфигурацию реплики, чтобы она могла принимать запросы после восстановления
+echo 'hot_standby = on' >> /var/lib/postgresql/14/replica/postgresql.auto.conf
+
+Запустим реплику
+pg_ctlcluster 14 replica start
+
+Проверяем, 
+pg_lsclusters
+14  main    5432 online          postgres /var/lib/postgresql/14/main    /var/log/postgresql/postgresql-14-main.log
+14  replica 5433 online,recovery postgres /var/lib/postgresql/14/replica /var/log/postgresql/postgresql-14-replica.log
+
+select pg_is_in_recovery() возвращает true для false, и true для реплики. 
+
+На основном сервере создадим репликационный слот:
+pg_create_physical_replication_slot('rep_slot');
+
+На реплике добавим в postgresql.conf параметр
+primary_slot_name = 'rep_slot'
+
+Также установим параметр recovery_min_apply_delay, чтобы реплика отставала от основного сервера
+recovery_min_apply_delay = '5min'
