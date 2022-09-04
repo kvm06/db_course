@@ -1,11 +1,13 @@
 1. Настройка физической репликации двумя кластерами базы данных. Кластеры main и replica будут находиться на одной виртуальной машине (работа через WSL). 
 
 В файле конфигурации для main, установим listen_addresses='localhost'
+Создадим пользователя для подключения
+create user replicator with replication encrypted password 'password'
 
 Создадим кластер для реплики:
 sudo pg_createcluster 14 replica 
 
-Удалим pgdata из реплики 
+Удалим директорию pgdata из реплики 
 rm -rf /var/lib/postgresql/14/replica/*
 
 С помощью pg_basebackup перенесем резервную копию из main в replica
@@ -32,3 +34,44 @@ primary_slot_name = 'rep_slot'
 
 Также установим параметр recovery_min_apply_delay, чтобы реплика отставала от основного сервера
 recovery_min_apply_delay = '5min'
+
+
+2. Создание логической репликации
+Уберем слот репликации из параметров postgresql.conf реплики и удалим его на основном сервере
+select pg_drop_replication_slot('rep_slot');
+
+На основном сервере изменим параметр wal_level
+alter system set wal_level = logical;
+
+Перезапустим 
+pg_ctlcluster 14 main restart
+
+Создадим кластер для логической репликации и запустим его
+sudo pg_createcluster 14 logical
+sudo pg_ctlcluster 14 logical start
+
+На основном кластере создадим базу данных lrep_db и таблицу
+create database lrep_db;
+\c lrep_db; 
+create table t(id serial primary key, s text);
+
+Создадим такую же базу данных и таблицу на втором кластере
+create database lrep_db;
+\c lrep_db; 
+create table t(id int primary key, s text);
+
+Создаем публикацию на основном кластере
+create publication my_pub for table t with (publish = 'insert, update, delete, truncate');
+
+Создаем подписку на втором кластере
+create subscription my_sub 
+connection 'host=localhost port=5432 user=replicator password=password dbname=lrep_db' 
+publication my_pub 
+with(connect = true, enabled = true, create_slot = true, slot_name = my_sub, synchronous_commit='off');
+
+Добавим тестовые данные на основном сервере
+insert into t(s) values ('test');
+
+Проверяем на втором кластере
+insert into t(s) values ('test');
+Данные получены. 
