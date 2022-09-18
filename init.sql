@@ -20,7 +20,7 @@ create table if not exists shop_db.address(
   created_at timestamp DEFAULT NOW(),
   updated_at timestamp,
   deleted_at timestamp,
-  address_jsonb json,
+  address_json json,
   postal_code int, 
   country varchar(100),
   region varchar(100),
