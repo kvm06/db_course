@@ -1,0 +1,60 @@
+Напишите запрос по своей базе с inner join
+Напишите запрос по своей базе с left join
+Напишите 5 запросов с WHERE с использованием разных
+операторов, опишите для чего вам в проекте нужна такая выборка данных
+
+
+1) Посчитаем сумму всех заказов по категориям
+  select pc.id, pc.category_name, sum(op.price) from orders o
+  inner join orders_products op on op.order_id = o.id
+  inner join products p on p.id = op.product_id
+  inner join product_categories pc on p.product_category_id = pc.id
+  group by pc.id;
+
+2) Выведем список товаров, которых не купили ни разу
+  select * from products p 
+  left join orders_products op on op.product_id = p.id
+  where op.product_id is null;
+
+3) 
+  Посчитать товары категории "Обувь", которые заканчиваются на слкаде. 
+  Может потребоваться для формирования списка товаров, которые необходимо закупить
+  select p.id, p.name, count(*) from products_in_stock ps
+  inner join products p on p.id = ps.product_id
+  where product_category_id = 1
+  group by p.id
+  having count(*) <= 1;
+  
+  Вывести сумму товаров, купленных покупателем в текущем году. 
+  Например, по условиям акции если сумма заказов превышает определенный размер, мы предоставляем скидку. 
+  select c.id, sum(op.price) 
+  from orders o
+  inner join orders_products op on op.order_id = o.id
+  inner join customers c on c.id = o.customer_id
+  where c.id = 1 and o.created_at between '2022-01-01' and now();
+  
+  Показать обувь меньше чем 30 размер, количество которых превышает 5
+  Например, мы хотим предоставить скидку на школьную обувь
+  select p.id, p.name, ps.quantity
+  from products_in_stock ps
+  inner join products p on p.id = ps.product_id
+  where product_category_id = 1 and ps.size < 30 and ps.quantity >= 5;
+
+  Выбрать все заказы, которые не доставлены, но сделаны давно
+  select o.id, d.status_name
+  from orders o
+  left join delivery d on d.order_id = o.id
+  where d.delivery_status <> 5
+  order by o.created_at desc
+
+  Найти из каких городов сделано больше заказов в Москве и Московской области, чтобы решить
+  где открыть пункт выдачи
+  select a.locality, count(*) 
+  from orders o 
+  inner join customers c on c.id = o.customer_id
+  inner join address a on a.id = c.address_id
+  where region in ('Москва', 'Московская область')
+  group by a.locality
+  order by count(*) desc
+
+  
