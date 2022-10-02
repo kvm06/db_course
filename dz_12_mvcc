@@ -32,3 +32,34 @@ begin
     
   commit;
 end;
+
+Загрузить данные из приложенных в материалах csv.
+Реализовать следующими путями:
+Создадим таблицу для хранения данных
+drop table csv_data; 
+create table csv_data (Handle varchar(255), Title	varchar(255), Body	text, 
+Vendor	varchar(255), Type	varchar(255), Tags	varchar(255), 
+Published	varchar(255), Option1Name varchar(255),	Option1Value varchar(255),	
+Option2Name varchar(255),	Option2Value varchar(255),Option3Name varchar(255),	
+Option3Value varchar(255), VariantSKU	varchar(255), VariantGrams	varchar(255), 
+VariantInventoryTracker varchar(255), VariantInventoryQty	varchar(255), 
+VariantInventoryPolicy	varchar(255), VariantFulfillmentService	varchar(255), 
+VariantPrice varchar(255), VariantCompareAtPrice	varchar(255), VariantRequiresShipping	varchar(255), 
+VariantTaxable varchar(255), VariantBarcode  varchar(255), ImageSrc	text, ImageAltText	varchar(255), 
+GiftCard	varchar(255), SEOTitle varchar(255), SEODescription	varchar(255),
+ GoogleShoppingGoogleProductCategory	varchar(255), GoogleShoppingGender varchar(255), 
+ GoogleShoppingAgeGroup varchar(255), GoogleShoppingMPN varchar(255), GoogleShoppingAdWordsGrouping varchar(255), 	
+ GoogleShoppingAdWordsLabels	varchar(255), GoogleShoppingCondition varchar(255), GoogleShoppingCustomProduct	varchar(255), 
+ GoogleShoppingCustomLabel0 varchar(255), GoogleShoppingCustomLabel1	varchar(255), GoogleShoppingCustomLabel2 varchar(255), 
+ GoogleShoppingCustomLabel3 varchar(255), GoogleShoppingCustomLabel4 varchar(255), VariantImage	varchar(255), 
+ VariantWeightUnit varchar(255));
+
+ Сохраним файлы в каталог C:/ProgramData/MySQL/MySQL Server 8.0/Uploads
+ 
+ Загрузим файлы с помощью load data
+load data infile 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/Apparel.csv' 
+into table csv_data 
+fields terminated by ',' 
+enclosed by '"' 
+lines terminated by '\n' 
+ignore 1 rows;
