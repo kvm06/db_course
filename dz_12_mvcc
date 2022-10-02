@@ -1,0 +1,34 @@
+Описать пример транзакции из своего проекта с изменением данных в нескольких таблицах. Реализовать в виде хранимой процедуры.
+
+При оформлении пользователем заказа, нам необходимо, изменить статус заказа и уменьшить количество товара на складе. 
+Для этого изменим в одной транзакции две таблицы: заказы и товары-на-складе (orders, orders_products, products_in_stock); 
+
+Добавим несколько статусов 
+insert into order_statuses(status_name)
+values ('Новый'),  ('В обработке'), ('Принят'), ('Передан в доставку'), ('Выполнен'), ('Отменен'), ('Возврат'); 
+
+Добавим заказ 
+insert into orders (customer_id, order_status_id) values (1, 1); 
+Добавим описание заказа
+insert into orders_products (order_id, product_id, quantity, price)
+values (1, 1, 1, 10000);
+
+Создадим функцию, которая будет переводить заказ из статуса "Новый" в статус "В обработке", а также резервировать товар выбранный покупателем.
+
+create procedure `accept_order`(_order_id int)
+begin    
+	declare exit handler for sqlexception
+    begin
+		  rollback;
+    end;
+  
+  start transaction;
+	update orders set order_status_id = 2 where id = _order_id;
+
+	update products_in_stock ps
+    inner join orders_products op on op.product_id = ps.product_id
+    inner join orders o on o.id = op.order_ids and o.id = _order_id
+	set ps.quantity = ps.quantity - op.quantity;
+    
+  commit;
+end;
