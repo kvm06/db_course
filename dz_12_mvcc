@@ -63,3 +63,10 @@ fields terminated by ','
 enclosed by '"' 
 lines terminated by '\n' 
 ignore 1 rows;
+
+Загрузка с помощью mysqlimport
+mysqlimport --ignore-lines=1 \
+            --fields-terminated-by=, \
+             -u root \
+             -p shop_db \
+             Apparel.csv
