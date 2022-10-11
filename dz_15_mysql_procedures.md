@@ -132,7 +132,7 @@ delimiter ;
 Запросим все отчет по продажам за 2022 г. с разбивкой по категориям 
 call get_orders('2022-01-01', '2022-12-31', 'pc.id'); 
 
-Дать права да запуск процедуры пользователю client
+Дать права да запуск процедуры пользователю manager
 ```
 grant execute on procedure shop_db.get_orders to 'manager';
 ```
