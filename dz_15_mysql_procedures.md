@@ -134,5 +134,5 @@ call get_orders('2022-01-01', '2022-12-31', 'pc.id');
 
 Дать права да запуск процедуры пользователю client
 ```
-grant execute on procedure shop_db.get_products2 to 'client';
+grant execute on procedure shop_db.get_orders to 'manager';
 ```
