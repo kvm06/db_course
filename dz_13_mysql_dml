@@ -4,28 +4,11 @@
 также сделать выборку показывающую самый дорогой и самый дешевый товар в каждой категории
 сделать rollup с количеством товаров по категориям
 
-группировки с ипользованием CASE, HAVING, ROLLUP, GROUPING() :
+группировки с ипользованием CASE, HAVING, ROLLUP, GROUPING():
 Выберем товары, которые 
 
 Добавим еще несколько записей и посчитаем маржинальность товаров (сколько общей прибыли принесли продажи каждого товара).
 Условно будем считать, что маржинальность >= 50% высокая, от 30 до 50 средняя, от 10 до 30 низкая. 
-
-insert into suppliers (name, inn, address_id, phone, email)
-values
-('ООО "Найк"', '333115522', 1, '89999999999', 'nike@mail.ru');
-
-insert into suppliers_pricelists (supplier_id, valid_from, article_num, product_name, product_id, price)
-values (1, current_date, 'AV2388S4', 'Кроссовки ASTIR', 1, 9000.00),
-(1, current_date, 'AV2388S5', 'Кроссовки MX M', 2, 8000.00),
-(1, current_date, 'AV2388S6', 'Кроссовки ASTIR-MK', 3, 5000.00); 
-
-insert into orders (customer_id, order_status_id)
-values (1, 1), (1, 2), (1, 4);
-
-insert into orders_products(order_id, product_id, price)
-values (2, 1, 12000),
-(3, 2, 10000),
-(4, 3, 10000); 
 
 select p.id, 100 - (sum(sp.price * op.quantity)/sum(op.price * op.quantity) * 100) as marginality,
 	case when 100 - (sum(sp.price * op.quantity)/sum(op.price * op.quantity) * 100) >= 50 then 'Высокая'
@@ -36,13 +19,27 @@ from products as p
 left join suppliers_pricelists as sp on sp.product_id = p.id 
 left join orders_products as op on op.product_id = p.id
 left join orders as o on o.id = op.order_id
+left join order_statuses os on os.id = o.order_status_id
+where os.status_name = 'Выполнен'
 group by p.id
 having 100 - (sum(sp.price * op.quantity)/sum(op.price * op.quantity) * 100) >= 10
 order by marginality desc;
 
+Вывод: 
 3	50.0000	Высокая
 2	20.0000	Низкая
 1	18.1818	Низкая
+
+Посчитаем общую прибыль по годам+ категориям с помощью ROLLUP
+select 
+	IF(GROUPING(YEAR(o.created_at)), 'Total in year', YEAR(o.created_at)) as order_year,
+	pc.id  as category_id,
+	sum(op.price * op.quantity) as total_income
+from products as p
+inner join product_categories as pc on pc.id = p.product_category_id
+left join orders_products as op on op.product_id = p.id
+left join orders o on o.id = op.order_id
+group by YEAR(o.created_at), category_id with rollup;
 
 для магазина к предыдущему списку продуктов добавить максимальную и минимальную цену и кол-во предложений
 select 
@@ -51,7 +48,7 @@ select
 	max(op.price) 
 from products as p
 left join orders_products op on op.product_id = p.id
-group by p.id
+group by p.id;
 
 также сделать выборку показывающую самый дорогой и самый дешевый товар в каждой категории
 select 
@@ -63,3 +60,10 @@ inner join product_categories as pc on pc.id = p.product_category_id
 group by pc.id; 
 
 сделать rollup с количеством товаров по категориям
+select 
+	pc.id  as category_id,
+	count(p.id) as products_in_category
+from products as p
+inner join product_categories as pc on pc.id = p.product_category_id
+group by pc.id with rollup;
+
