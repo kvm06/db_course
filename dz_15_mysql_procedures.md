@@ -44,31 +44,31 @@ begin
   declare sql_query  varchar(1000);   
     
   if _category_id is not null then
-		set @category_filter = concat('product_category_id = ', _category_id);
+    set @category_filter = concat('product_category_id = ', _category_id);
   end if;
   if _category_id is not null then
-		set @brand_filter = concat('product_brand_id = ', _brand_id);
-	end if;
+    set @brand_filter = concat('product_brand_id = ', _brand_id);
+  end if;
   if _price_from is not null then
-		set @price_from_filter = concat('price >= ', _price_from);
-	end if;
+    set @price_from_filter = concat('price >= ', _price_from);
+  end if;
   if _price_to is not null then
-		set @price_to_filter = concat('price <= ', _price_to);
-	end if;
+    set @price_to_filter = concat('price <= ', _price_to);
+  end if;
 
-	set @where_clause = concat('where ', concat_ws( ' and ', @category_filter, @brand_filter,  @price_from_filter, @price_to_filter));
+  set @where_clause = concat('where ', concat_ws( ' and ', @category_filter, @brand_filter,  @price_from_filter, @price_to_filter));
         
-	if _sort_col is not null then
-		set @order_by = concat('order by ', _sort_col, ' ', coalesce(_sort_type, 'asc'));
+  if _sort_col is not null then
+    set @order_by = concat('order by ', _sort_col, ' ', coalesce(_sort_type, 'asc'));
   end if;
     
   if _limit is not null then
-		set @limit_val = concat('limit ', _limit);
-    end if;
+    set @limit_val = concat('limit ', _limit);
+  end if;
     
-	if _offset is not null then
-		set @offset_val = concat('offset ', _offset);
-    end if;
+  if _offset is not null then
+    set @offset_val = concat('offset ', _offset);
+  end if;
 
   set @sql_query = concat_ws (' ',
     'select * ' ,
