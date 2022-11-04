@@ -25,11 +25,7 @@ explain select p.id, p.name, count(*) as count_in_stock,
   where product_category_id = 1 and ps.quantity <= 10;
 ```
 
-# id, select_type, table, partitions, type, possible_keys, key, key_len, ref, rows, filtered, Extra
-1	PRIMARY	p		ALL	PRIMARY				3	33.33	Using where
-1	PRIMARY	ps		ALL					991	3.33	Using where; Using join buffer (hash join)
-2	DEPENDENT SUBQUERY	op_inn		ALL					10976	10.00	Using where
-2	DEPENDENT SUBQUERY	o_inn		eq_ref	PRIMARY	PRIMARY	4	shop_db.op_inn.order_id	1	33.33	Using where
+![image](https://user-images.githubusercontent.com/62503531/200008305-07002594-7c60-4db7-8384-b76aef8ec24f.png)
 
 Построим план запроса в виде JSON
 ```
